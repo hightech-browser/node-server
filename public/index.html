@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+
+  <head>
+
+  </head>
+  <body>
+    <h1>I am alive!!</h1>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.js"></script>
+
+    <script>
+      var URL_SERVER = 'https://localhost:443';
+      var socket = io.connect(URL_SERVER);
+      socket.emit('open', { url: 'tecmundo.com.br' });
+    </script>
+  </body>
+
+</html>
