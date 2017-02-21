@@ -33,13 +33,11 @@ io.sockets.on('connection', function (socket) {
     if(!clients[clientHash]){
       clients[clientHash] = {
         'name' : data.name,
-        'sockets' : []
+        'socket' : null
       };
     }
       
-    if(clients[clientHash].sockets.indexOf(socket.id) === -1){
-      clients[clientHash].sockets.push(socket.id);
-    }
+    clients[clientHash].socket = socket.id;
 
   });
   socket.on('change-name', function (data) {
@@ -51,9 +49,8 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('disconnect', function() {
     log('disconnect: ' + socket.id + ' / ' + clientHash);
-    if(clientHash && clients[clientHash].sockets instanceof Array){
-      var index = clients[clientHash].sockets.indexOf(socket.id);
-      clients[clientHash].sockets.splice(index, 1);
+    if(clientHash && clients[clientHash].socket){
+      clients[clientHash].socket = null;
     }
   });
 
@@ -64,13 +61,13 @@ io.sockets.on('connection', function (socket) {
       return;
     }
 
-    if(clients[obj.hash].sockets.length === 0){
+    if(!clients[obj.hash].socket){
       log('client with ' + obj + ' has no socket connected!');
       io.to(socket.id).emit('error', 'client has no socket connected!');
       return;
     }
 
-    var socketID = clients[obj.hash].sockets[0];
+    var socketID = clients[obj.hash].socket;
     io.to(socketID).emit('open', obj);
   });
 });
