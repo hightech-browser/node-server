@@ -75,11 +75,13 @@ io.sockets.on('connection', function (socket) {
   });
 });
 
-app.get('/', function(req, response) {
-  var objToJson = { };
-  objToJson.response = clients;
-  response.send(JSON.stringify(objToJson));
-});
+if(!(process.env.ENV && process.env.ENV === 'heroku')){
+  app.get('/', function(req, response) {
+    var objToJson = { };
+    objToJson.response = clients;
+    response.send(JSON.stringify(objToJson));
+  });
+}
 
 app.get('/name', function(req, response) {
   var objToJson = { };
