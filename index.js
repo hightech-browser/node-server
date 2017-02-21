@@ -1,5 +1,5 @@
 var fs = require('fs');
-var https = require('https');
+var http = require('http');
 
 var express = require('express');
 var app = express();
@@ -9,7 +9,7 @@ var options = {
   cert: fs.readFileSync('./file.crt')
 };
 var serverPort = process.env.PORT || 5000;
-var server = https.createServer(options, app);
+var server = http.createServer(app);
 var io = require('socket.io')(server);
 
 app.set('port', serverPort);
