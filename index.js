@@ -9,28 +9,84 @@ var options = {
   cert: fs.readFileSync('./file.crt')
 };
 var serverPort = 443;
-
 var server = https.createServer(options, app);
 var io = require('socket.io')(server);
 
-app.get('/', function(req, res) {
-  res.sendFile(__dirname + '/public/index.html');
-});
 
+function log(text) {
+  var date = new Date();
+  console.log('[' + date.getHours() + ':' + date.getMinutes() +'] ' + text);
+}
+
+var clients = {};
 
 io.sockets.on('connection', function (socket) {
-/*
-  socket.emit('news', { hello: 'world' });
-  socket.on('my other event', function (data) {
-    console.log(data);
+  var clientHash;
+  log('new connection: ' + socket.id);
+  io.to(socket.id).emit('registry');
+
+  socket.on('registry', function (data) {
+    clientHash = data.hash;
+    log('registry client: ' + clientHash);
+
+    if(!clients[clientHash]){
+      clients[clientHash] = {
+        'name' : data.name,
+        'sockets' : []
+      };
+    }
+      
+    if(clients[clientHash].sockets.indexOf(socket.id) === -1){
+      clients[clientHash].sockets.push(socket.id);
+    }
+
   });
-*/
-  socket.on('open', function (data) {
-    console.log('  open request', data);
-    socket.emit('open', data);
+  socket.on('change-name', function (data) {
+    log('name changed from ' + clients[clientHash].name + ' to ' + data);
+    clients[clientHash].name = data;
+  });
+
+
+
+  socket.on('disconnect', function() {
+    log('disconnect: ' + socket.id + ' / ' + clientHash);
+    if(clientHash && clients[clientHash].sockets instanceof Array){
+      var index = clients[clientHash].sockets.indexOf(socket.id);
+      clients[clientHash].sockets.splice(index, 1);
+    }
+  });
+
+  socket.on('open', function (obj) {
+    if(!clients[obj.hash]){
+      log('client with ' + obj + ' not registred!');
+      io.to(socket.id).emit('error', 'client not registred!');
+      return;
+    }
+
+    if(clients[obj.hash].sockets.length === 0){
+      log('client with ' + obj + ' has no socket connected!');
+      io.to(socket.id).emit('error', 'client has no socket connected!');
+      return;
+    }
+
+    var socketID = clients[obj.hash].sockets[0];
+    io.to(socketID).emit('open', obj);
   });
 });
 
 server.listen(serverPort, function() {
-  console.log('server up and running at %s port', serverPort);
+  log('server up and running at ' + serverPort + ' port');
+});
+
+
+app.get('/', function(req, response) {
+  var objToJson = { };
+  objToJson.response = clients;
+  response.send(JSON.stringify(objToJson));
+});
+
+app.get('/name', function(req, response) {
+  var objToJson = { };
+  objToJson.response = clients;
+  response.send(clients[req.query.id]);
 });
