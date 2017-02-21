@@ -1,4 +1,11 @@
 {
+  "name": "hishtech-browser-node-server",
+  "version": "0.0.1",
+  "description": "No words for this awsome application",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
   "devDependencies": {},
   "dependencies": {
     "express": "^4.14.1",
