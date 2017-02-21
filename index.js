@@ -74,11 +74,6 @@ io.sockets.on('connection', function (socket) {
   });
 });
 
-server.listen(serverPort, function() {
-  log('server up and running at ' + serverPort + ' port');
-});
-
-
 app.get('/', function(req, response) {
   var objToJson = { };
   objToJson.response = clients;
@@ -89,4 +84,8 @@ app.get('/name', function(req, response) {
   var objToJson = { };
   objToJson.response = clients;
   response.send(clients[req.query.id]);
+});
+
+server.listen(serverPort, function() {
+  log('server up and running at ' + serverPort + ' port');
 });
