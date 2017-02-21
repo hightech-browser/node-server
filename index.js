@@ -1,15 +1,15 @@
 var fs = require('fs');
-var http = require('http');
+var https = require('https');
 
 var express = require('express');
 var app = express();
 
-/* var options = {
+var options = {
   key: fs.readFileSync('./file.pem'),
   cert: fs.readFileSync('./file.crt')
-}; */
+};
 var serverPort = process.env.PORT || 5000;
-var server = http.createServer(app);
+var server = https.createServer(options, app);
 var io = require('socket.io')(server);
 
 app.set('port', serverPort);
@@ -89,6 +89,6 @@ app.get('/name', function(req, response) {
 
 
 
-app.listen(app.get('port'), function() {
+server.listen(app.get('port'), function() {
   console.log('Node app is running on port', app.get('port'));
 });
