@@ -33,11 +33,12 @@ io.sockets.on('connection', function (socket) {
     if(!clients[clientHash]){
       clients[clientHash] = {
         'name' : data.name,
-        'socket' : null
+        'socket' : []
       };
     }
-      
-    clients[clientHash].socket = socket.id;
+    if(clients[clientHash].sockets.indexOf(socket.id) === -1){
+      clients[clientHash].sockets.push(socket.id);    
+    }
 
   });
   socket.on('change-name', function (data) {
@@ -49,8 +50,9 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('disconnect', function() {
     log('disconnect: ' + socket.id + ' / ' + clientHash);
-    if(clientHash && clients[clientHash].socket){
-      clients[clientHash].socket = null;
+    if(clientHash && clients[clientHash].sockets instanceof Array){   
+      var index = clients[clientHash].sockets.indexOf(socket.id);
+      clients[clientHash].sockets.splice(index, 1);
     }
   });
 
@@ -61,13 +63,13 @@ io.sockets.on('connection', function (socket) {
       return;
     }
 
-    if(!clients[obj.hash].socket){
+    if(!clients[obj.hash].sockets.length === 0){
       log('client with ' + obj + ' has no socket connected!');
       io.to(socket.id).emit('error', 'client has no socket connected!');
       return;
     }
 
-    var socketID = clients[obj.hash].socket;
+    var socketID = clients[obj.hash].sockets[0];
     io.to(socketID).emit('open', obj);
   });
 });
@@ -81,9 +83,14 @@ if(!(process.env.ENV && process.env.ENV === 'heroku')){
 }
 
 app.get('/name', function(req, response) {
-  var objToJson = { };
-  objToJson.response = clients;
-  response.send(clients[req.query.id]);
+  if(!(req.query.id instanceof Array)){
+    req.query.id = [req.query.id];
+  }
+  var resp = { };
+  for (var i = 0; i < req.query.id.length; i++) {
+    resp[req.query.id[i]] = clients[req.query.id[i]];
+  }
+  response.send(resp);
 });
 
 
